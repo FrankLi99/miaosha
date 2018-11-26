@@ -1,6 +1,7 @@
 package com.ghc.starter.controller;
 
 import com.ghc.starter.domain.model.User;
+import com.ghc.starter.result.Result;
 import com.ghc.starter.service.UserService;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +24,15 @@ public class centercontroller {
     }
 
     @RequestMapping("/getAllUsers")
-    public List<User> getAllUsers(){
-        return userService.getAllUsers();
+    public Result<List<User>> getAllUsers(){
+        List<User> userList = null;
+        Result<List<User>> listResult=null;
+        try{userList = userService.getAllUsers();
+//            int a = 1/0; //测试下异常
+            listResult = Result.success(userList);
+        }catch(Exception e){
+            listResult = Result.error();
+        }
+        return listResult;
     }
 }
