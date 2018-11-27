@@ -1,6 +1,7 @@
 package com.ghc.starter.redis;
 
 import com.alibaba.fastjson.JSON;
+import com.ghc.starter.prefix.KeyPrefix;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
@@ -11,26 +12,44 @@ public class RedisService <T> {
     @Autowired
     private JedisPool jedisPool;
 
-    public T get(String key,Class<T> clazz){
+    public T get(KeyPrefix keyPrefix,String key, Class<T> clazz){
         Jedis jedis = null;
         T t;
         try{jedis = jedisPool.getResource();
-            String value = jedis.get(key);
+            String realKey = keyPrefix.getPrefix() + key;
+            String value = jedis.get(realKey);
             t = str2Bean(value,clazz);
         }finally{
             return2Pool(jedis);
         }
         return t;
     }
-    public boolean set(String key,T value){
+    public boolean set(KeyPrefix keyPrefix,String key,T value){
         Jedis jedis = null;
         try{jedis = jedisPool.getResource();
             String str = bean2Str(value);
             if(str==null||str.length()<=0){
                 return false;
-            }else{ jedis.set(key,str);
-                    return true;
+                }else{
+                         String realKey = keyPrefix.getPrefix() + key;
+                         int expireSeconds = keyPrefix.expireSeconds();
+                         if(expireSeconds>0){
+                             jedis.setex(realKey,expireSeconds,str);
+                         }
+                         else{
+                                jedis.set(realKey,str);
+                         }
+                 return true;
                 }
+        }finally{
+            return2Pool(jedis);
+        }
+    }
+    public boolean exists(KeyPrefix keyPrefix,String key){
+        Jedis jedis = null;
+        try{    jedis = jedisPool.getResource();
+                String realKey = keyPrefix.getPrefix() + key;
+                return jedis.exists(realKey);
         }finally{
             return2Pool(jedis);
         }

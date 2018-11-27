@@ -1,6 +1,8 @@
 package com.ghc.starter;
 
 
+import com.ghc.starter.domain.model.User;
+import com.ghc.starter.prefix.UserKey;
 import com.ghc.starter.redis.RedisService;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,9 +19,14 @@ public class Test {
 
     @org.junit.Test
     public void testRedisService(){
-        redisService.set("key1","value1");
-        String value = (String)redisService.get("key1",String.class);
-        System.out.println("value: "+value);
+        User user = new User();
+        user.setId(2);
+        user.setName("frank2");
+
+        redisService.set(UserKey.getById,"1",user);
+        User getUser = (User)redisService.get(UserKey.getById,"1",User.class);
+
+        System.out.println(getUser.getName());
     }
 
 }
